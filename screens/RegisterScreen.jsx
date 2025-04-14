@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, TextInput, Text, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  TextInput, // haha giatay ra
+  Text,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  useWindowDimensions,
+} from "react-native";
 import CustomButton from "../components/CustomButton";
 import CustomCard from "../components/CustomCard";
 import { auth, db } from "../firebase/firebase";
@@ -11,6 +19,7 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const { width } = useWindowDimensions();
 
   const handleRegister = async () => {
     if (!email || !password) {
@@ -22,22 +31,18 @@ export default function RegisterScreen({ navigation }) {
       setError("Passwords do not match");
     } else {
       try {
-        // Create user with Firebase Authentication
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-        
-        // Add user to Firestore, including password and role (initially empty string)
+
         await addDoc(collection(db, "users"), {
           id: user.uid,
           email: email,
-          password: password, // Storing password (NOT recommended for production)
-          role: "", // Adding an empty role to be edited later
+          password: password, // Not recommended to store plain passwords in production!
+          role: "",
           createdAt: new Date(),
         });
-  
+
         console.log("✅ User registered and added to Firestore");
-        
-        // Replace current screen with Login screen
         navigation.replace("Login");
       } catch (error) {
         setError(error.message);
@@ -45,75 +50,77 @@ export default function RegisterScreen({ navigation }) {
       }
     }
   };
-  
-  
-  
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Firebase App</Text>
-      <CustomCard>
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-        />
-        {error ? (
-          <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>
-        ) : null}
-        <CustomButton title="Register" onPress={handleRegister} />
-        <Pressable onPress={() => navigation.navigate("Login")}>
-          <Text>Already a member? Login here</Text>
-        </Pressable>
-      </CustomCard>
-    </View>
+    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Firebase App</Text>
+        <CustomCard style={[styles.card, { width: width > 420 ? 400 : "90%" }]}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+          />
+          {error ? (
+            <Text style={styles.errorText}>{error}</Text>
+          ) : null}
+          <CustomButton title="Register" onPress={handleRegister} />
+          <Pressable onPress={() => navigation.navigate("Login")}>
+            <Text style={styles.linkText}>Already a member? Login here</Text>
+          </Pressable>
+        </CustomCard>
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingVertical: 50,
     justifyContent: "center",
     alignItems: "center",
-    padding: 16,
   },
   title: {
     fontSize: 24,
     marginBottom: 16,
     fontWeight: "bold",
+    textAlign: "center",
+  },
+  card: {
+    alignItems: "center",
+    padding: 16,
   },
   input: {
-    width: 400,
+    width: "100%",
     padding: 10,
     marginVertical: 10,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 5,
   },
-  button: {
-    backgroundColor: "#00a2ff",
-    padding: 10,
-    borderRadius: 5,
-    cursor: "pointer",
-  },
-  buttonText: {
-    color: "#fff",
+  errorText: {
+    color: "red",
+    marginBottom: 10,
     textAlign: "center",
-    fontSize: 16,
+  },
+  linkText: {
+    marginTop: 10,
+    textAlign: "center",
   },
 });
