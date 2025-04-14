@@ -1,0 +1,31 @@
+[debug] [2025-04-05T12:12:44.645Z] ----------------------------------------------------------------------
+[debug] [2025-04-05T12:12:44.652Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\User\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only functions --debug
+[debug] [2025-04-05T12:12:44.652Z] CLI Version:   14.1.0
+[debug] [2025-04-05T12:12:44.653Z] Platform:      win32
+[debug] [2025-04-05T12:12:44.653Z] Node Version:  v22.14.0
+[debug] [2025-04-05T12:12:44.654Z] Time:          Sat Apr 05 2025 20:12:44 GMT+0800 (Philippine Standard Time)
+[debug] [2025-04-05T12:12:44.654Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-04-05T12:12:45.115Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-04-05T12:12:45.118Z] > authorizing via signed-in user (jackrovann.tabuno@hcdc.edu.ph)
+[debug] [2025-04-05T12:12:45.119Z] [iam] checking project adv102-95cac for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2025-04-05T12:12:45.122Z] Checked if tokens are valid: true, expires at: 1743858048975
+[debug] [2025-04-05T12:12:45.123Z] Checked if tokens are valid: true, expires at: 1743858048975
+[debug] [2025-04-05T12:12:45.126Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/adv102-95cac:testIamPermissions [none]
+[debug] [2025-04-05T12:12:45.127Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/adv102-95cac:testIamPermissions x-goog-quota-user=projects/adv102-95cac
+[debug] [2025-04-05T12:12:45.128Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/adv102-95cac:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-04-05T12:12:46.334Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/adv102-95cac:testIamPermissions 200
+[debug] [2025-04-05T12:12:46.335Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/adv102-95cac:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-04-05T12:12:46.336Z] Checked if tokens are valid: true, expires at: 1743858048975
+[debug] [2025-04-05T12:12:46.337Z] Checked if tokens are valid: true, expires at: 1743858048975
+[debug] [2025-04-05T12:12:46.337Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/adv102-95cac/serviceAccounts/adv102-95cac@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-04-05T12:12:46.338Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/adv102-95cac/serviceAccounts/adv102-95cac@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-04-05T12:12:47.549Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/adv102-95cac/serviceAccounts/adv102-95cac@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2025-04-05T12:12:47.549Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/adv102-95cac/serviceAccounts/adv102-95cac@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'adv102-95cac'...
+[info] 
+[info] i  deploying functions 
+[info] Running command: npm --prefix "$RESOURCE_DIR" run lint
+[error] 
+[error] Error: functions predeploy error: Command terminated with non-zero exit code 1
