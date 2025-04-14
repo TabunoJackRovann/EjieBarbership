@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View,
-  TextInput, // haha giatay ra
+  TextInput,
   Text,
   StyleSheet,
   Pressable,
@@ -11,7 +11,7 @@ import {
 import CustomButton from "../components/CustomButton";
 import CustomCard from "../components/CustomCard";
 import { auth, db } from "../firebase/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { collection, addDoc } from "firebase/firestore";
 
 export default function RegisterScreen({ navigation }) {
@@ -34,16 +34,23 @@ export default function RegisterScreen({ navigation }) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
+        // Sign out immediately to prevent auto-login
+        await signOut(auth);
+
+        // Add user to Firestore
         await addDoc(collection(db, "users"), {
           id: user.uid,
           email: email,
-          password: password, // Not recommended to store plain passwords in production!
+          password: password, // ⚠️ For testing only
           role: "",
           createdAt: new Date(),
         });
 
-        console.log("✅ User registered and added to Firestore");
-        navigation.replace("Login");
+        console.log("✅ User registered, signed out, and added to Firestore");
+
+        // Navigate to Login screen
+        navigation.navigate("Login");
+
       } catch (error) {
         setError(error.message);
         console.error("❌ Registration error:", error);
@@ -80,7 +87,12 @@ export default function RegisterScreen({ navigation }) {
             <Text style={styles.errorText}>{error}</Text>
           ) : null}
           <CustomButton title="Register" onPress={handleRegister} />
-          <Pressable onPress={() => navigation.navigate("Login")}>
+          <Pressable
+            onPress={() => {
+              console.log("🔁 Login link pressed");
+              navigation.navigate("Login to firebase nako");
+            }}
+          >
             <Text style={styles.linkText}>Already a member? Login here</Text>
           </Pressable>
         </CustomCard>
@@ -122,5 +134,6 @@ const styles = StyleSheet.create({
   linkText: {
     marginTop: 10,
     textAlign: "center",
+  
   },
 });

@@ -1,36 +1,51 @@
-import { StyleSheet, View, Text, Pressable, ActivityIndicator, Alert } from "react-native";
+import { StyleSheet, View, Text, Pressable, ActivityIndicator } from "react-native";
 import { auth } from "../firebase/firebase";
 import { signOut } from "firebase/auth";
 import { useState } from "react";
 
 export default function ProfileScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [unauthorizedAttempts, setUnauthorizedAttempts] = useState(0); // NEW state
+
   const user = auth.currentUser;
 
   const handleLogout = async () => {
-    setIsLoading(true); // Start loading
-
+    setIsLoading(true);
     try {
-      await signOut(auth); // Actual logout action
+      await signOut(auth);
       setTimeout(() => {
-        setIsLoading(false); // Stop loading after the delay
-        navigation.navigate("Login"); // Navigate to the login screen after delay
-      }, 3000); // 3 seconds delay (adjust as needed)
+        setIsLoading(false);
+        navigation.navigate("Login");
+      }, 3000);
     } catch (error) {
       console.error("Logout failed:", error);
-      setIsLoading(false); // Stop loading in case of error
+      setIsLoading(false);
     }
   };
 
   const handleManageUsers = () => {
-    // No authorization check, directly navigate to CRUD screen
-    navigation.navigate("CRUD");
+    if (user.email === "prefinal@gmail.com") {
+      setError(""); // Clear error if previously triggered
+      setUnauthorizedAttempts(0); // Reset attempts
+      navigation.navigate("CRUD");
+    } else {
+      const newAttempts = unauthorizedAttempts + 1;
+      setUnauthorizedAttempts(newAttempts);
+
+      // Show error only on odd-numbered attempts
+      if (newAttempts % 2 !== 0) {
+        setError("ERROR: you have no authority to access this page!");
+      } else {
+        setError("");
+      }
+    }
   };
 
   return (
     <View style={styles.container}>
       {isLoading ? (
-        <ActivityIndicator size="large" color="#6A5ACD" /> // Show loading spinner for 3 seconds
+        <ActivityIndicator size="large" color="#6A5ACD" />
       ) : (
         <>
           {user ? (
@@ -40,18 +55,17 @@ export default function ProfileScreen({ navigation }) {
                 Account Created: {new Date(user.metadata.creationTime).toLocaleDateString()}
               </Text>
 
-              {/* Logout Button */}
               <Pressable style={styles.button} onPress={handleLogout}>
                 <Text style={styles.buttonText}>Logout</Text>
               </Pressable>
 
-              {/* Manage Users Button (CRUD) */}
-              <Pressable
-                style={[styles.button, styles.crudButton]} // Add styling for the new button
-                onPress={handleManageUsers} // Call handleManageUsers instead
-              >
-                <Text style={styles.buttonText}>Manage Users (CRUD)</Text>
+              <Pressable style={[styles.button, styles.crudButton]} onPress={handleManageUsers}>
+                <Text style={styles.buttonText}>Admin Access</Text>
               </Pressable>
+
+              {error !== "" && (
+                <Text style={styles.errorText}>{error}</Text>
+              )}
             </>
           ) : (
             <Text style={styles.text}>No user logged in</Text>
@@ -87,6 +101,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   crudButton: {
-    backgroundColor: "#6A5ACD", // Add a different color for CRUD button
+    backgroundColor: "#6A5ACD",
+  },
+  errorText: {
+    color: "red",
+    marginTop: 10,
+    fontSize: 14,
+    fontWeight: "bold",
   },
 });
