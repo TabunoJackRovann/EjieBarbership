@@ -90,7 +90,7 @@ export default function RegisterScreen({ navigation }) {
           <Pressable
             onPress={() => {
               console.log("🔁 Login link pressed");
-              navigation.navigate("Login to firebase nako");
+              navigation.navigate("Login");
             }}
           >
             <Text style={styles.linkText}>Already a member? Login here</Text>

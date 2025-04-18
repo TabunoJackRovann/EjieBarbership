@@ -63,6 +63,13 @@ export default function ProfileScreen({ navigation }) {
                 <Text style={styles.buttonText}>Admin Access</Text>
               </Pressable>
 
+              <Pressable
+                      style={styles.button}
+                      onPress={() => navigation.navigate("Home")}
+                    >
+                      <Text style={styles.buttonText}>Back to home</Text>
+                    </Pressable>
+
               {error !== "" && (
                 <Text style={styles.errorText}>{error}</Text>
               )}

@@ -2,20 +2,22 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { auth } from "./firebase/firebase";
 
+// Screens
 import LoginScreen from "./screens/LoginScreen";
 import RegisterScreen from "./screens/RegisterScreen";
 import HomeScreen from "./screens/HomeScreen";
 import ProfileScreen from "./screens/ProfileScreen";
-import CRUDScreen from "./screens/CRUDScreen"; // ✅ IMPORT THIS
+import CRUDScreen from "./screens/CRUDScreen";
+import BookingScreen from "./screens/BookingScreen";
+import SelectBarber from "./screens/SelectBarber";
 
 const Stack = createNativeStackNavigator();
-const Tab = createBottomTabNavigator();
-const ProfileStack = createNativeStackNavigator(); // ✅ For nested profile + CRUD
+const ProfileStack = createNativeStackNavigator();
 
+// Profile stack for Profile + CRUD
 function ProfileNavigator() {
   return (
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
@@ -25,39 +27,23 @@ function ProfileNavigator() {
   );
 }
 
-function RootTab() {
-  const [initialRoute, setInitialRoute] = useState("Home");
-
-  useEffect(() => {
-    const loadLastTab = async () => {
-      const lastTab = await AsyncStorage.getItem("lastTab");
-      if (lastTab) setInitialRoute(lastTab);
-    };
-    loadLastTab();
-  }, []);
-
+// Main app stack that includes SelectBarber and BookingScreen
+function MainAppStack() {
   return (
-    <Tab.Navigator
-      initialRouteName={initialRoute}
-      screenOptions={{ headerShown: false }}
-      screenListeners={{
-        state: async (e) => {
-          const index = e.data.state.index;
-          const routeName = e.data.state.routes[index].name;
-          await AsyncStorage.setItem("lastTab", routeName);
-        },
-      }}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Profile" component={ProfileNavigator} />
-    </Tab.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Profile" component={ProfileNavigator} />
+      <Stack.Screen name="SelectBarber" component={SelectBarber} />
+      <Stack.Screen name="Booking" component={BookingScreen} />
+    </Stack.Navigator>
   );
 }
 
+// Authentication stack
 function AuthStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login to firebase nako" component={LoginScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
     </Stack.Navigator>
   );
@@ -85,7 +71,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      {user ? <RootTab /> : <AuthStack />}
+      {user ? <MainAppStack /> : <AuthStack />}
     </NavigationContainer>
   );
 }

@@ -10,6 +10,13 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.buttonText}>Go to Profile</Text>
       </Pressable>
+
+      <Pressable
+        style={styles.button}
+        onPress={() => navigation.navigate("SelectBarber")}
+      >
+        <Text style={styles.buttonText}>Book here</Text>
+      </Pressable>
     </View>
   );
 }
