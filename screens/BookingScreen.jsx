@@ -1,21 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, Pressable, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Alert, Pressable, TextInput, ScrollView, Dimensions } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { getAuth } from 'firebase/auth';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/firebase';
 
-const BookingScreen = ({ route }) => {
+const BookingScreen = ({ route, navigation }) => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [bookButtonDisabled, setBookButtonDisabled] = useState(true);
+  const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
+  const [hasExistingBooking, setHasExistingBooking] = useState(false);
+  const [markedDates, setMarkedDates] = useState({});
 
-  // Get barber info from route params
   const { selectedBarber: barber } = route.params;
-
   const timeSlots = ['10:30AM', '11:00AM', '11:30AM', '12:00PM', '12:30PM'];
+
+  useEffect(() => {
+    const checkExistingBooking = async () => {
+      const user = getAuth().currentUser;
+      if (!user) return;
+
+      const bookingsRef = collection(db, 'bookings');
+      const q = query(bookingsRef, where('email', '==', user.email));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        setHasExistingBooking(true);
+        Alert.alert(
+          'Booking Exists',
+          'You already have an existing booking. You must cancel it before creating a new one.'
+        );
+      }
+    };
+
+    checkExistingBooking();
+  }, []);
 
   const handleBooking = async () => {
     try {
@@ -24,7 +45,12 @@ const BookingScreen = ({ route }) => {
         Alert.alert('Authentication Required', 'Please log in to make a booking');
         return;
       }
-
+  
+      if (hasExistingBooking) {
+        Alert.alert('Booking Blocked', 'You already have an existing booking. Please cancel it first.');
+        return;
+      }
+  
       await addDoc(collection(db, 'bookings'), {
         barber,
         date: selectedDate,
@@ -34,35 +60,52 @@ const BookingScreen = ({ route }) => {
         email: user.email,
         createdAt: Timestamp.now(),
       });
-
+  
       Alert.alert(
         'Booking Confirmed!',
         `Thank you, ${name}! Your appointment with ${barber} on ${selectedDate} at ${selectedTime} has been booked.`
       );
-
+  
+      // Clear the selected date, time, and reset other states
       setSelectedDate('');
       setSelectedTime('');
       setName('');
       setPhone('');
+      setMarkedDates({}); // Clear the marked date in the calendar
+  
+      setHasExistingBooking(true); // Prevent further bookings
+  
     } catch (error) {
       console.error('Booking Error:', error);
       Alert.alert('Error', 'Failed to book. Please try again later.');
     }
   };
+  
 
   useEffect(() => {
-    if (selectedDate && selectedTime && name && phone && barber) {
+    if (selectedDate && selectedTime && name && phone && barber && !hasExistingBooking) {
       setBookButtonDisabled(false);
     } else {
       setBookButtonDisabled(true);
     }
-  }, [selectedDate, selectedTime, name, phone, barber]);
+  }, [selectedDate, selectedTime, name, phone, barber, hasExistingBooking]);
 
   const handleDateSelect = (date) => {
     if (selectedDate === date.dateString) {
       setSelectedDate('');
+      setMarkedDates((prev) => ({
+        ...prev,
+        [date.dateString]: { selected: false },
+      }));
     } else {
       setSelectedDate(date.dateString);
+      setMarkedDates({
+        [date.dateString]: {
+          selected: true,
+          selectedColor: '#2B4620',
+          selectedTextColor: 'white',
+        },
+      });
       Alert.alert('Selected Date', `You selected ${date.dateString}`);
     }
   };
@@ -71,174 +114,236 @@ const BookingScreen = ({ route }) => {
     setSelectedTime(selectedTime === time ? '' : time);
   };
 
+  const isMobile = screenWidth <= 768;
+  const containerStyle = isMobile ? styles.mobileContainer : styles.desktopContainer;
+
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
       <Text style={styles.title}>Book Your Appointment</Text>
 
-      <View style={styles.scheduleContainer}>
-        <Calendar
-          current={new Date().toISOString().split('T')[0]}
-          minDate={new Date().toISOString().split('T')[0]}
-          onDayPress={handleDateSelect}
-          markedDates={{
-            [selectedDate]: {
-              selected: true,
-              selectedColor: '#4CAF50',
-              selectedTextColor: 'white',
-            },
-          }}
-          monthFormat={'yyyy MM'}
-          markingType={'simple'}
-          style={styles.calendar}
-        />
+      <View style={[styles.scheduleContainer, containerStyle]}>
+        <View style={[styles.calendarContainer, isMobile && styles.fullWidthContainer]}>
+          <Calendar
+            current={new Date().toISOString().split('T')[0]}
+            minDate={new Date().toISOString().split('T')[0]}
+            onDayPress={handleDateSelect}
+            markedDates={markedDates}
+            markingType={'custom'}
+            style={styles.calendar}
+          />
+        </View>
 
-        <View style={styles.timeContainer}>
-          <Text style={styles.label}>Choose Time</Text>
-          {timeSlots.map((time) => (
-            <Pressable
-              key={time}
-              style={[styles.timeButton, selectedTime === time && styles.selectedTimeButton]}
-              onPress={() => handleTimeSelect(time)}
-            >
-              <Text style={styles.timeText}>{time}</Text>
-            </Pressable>
-          ))}
+        <View style={[styles.formContainer, isMobile && styles.fullWidthContainer]}>
+          <Text style={styles.selectedDateText}>
+            {selectedDate ? `You selected: ${selectedDate}` : 'No date selected'}
+          </Text>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter Name"
-              value={name}
-              onChangeText={setName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter Phone Number"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="numeric"
-            />
+          <View style={[styles.timeAndInputRow, !isMobile && { marginLeft: 20 }]}>
+            <View style={styles.timeContainer}>
+              {timeSlots.map((time) => (
+                <Pressable
+                  key={time}
+                  style={[styles.timeButton, selectedTime === time && styles.selectedTimeButton]}
+                  onPress={() => handleTimeSelect(time)}
+                >
+                  <Text style={[styles.timeText, selectedTime === time && styles.selectedTimeText]}>
+                    {time}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[styles.input, { color: 'white' }]}
+                placeholder="Enter Name"
+                value={name}
+                onChangeText={setName}
+              />
+              <TextInput
+                style={[styles.input, { color: 'white' }]}
+                placeholder="Enter Phone Number"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="numeric"
+              />
+
+              <Pressable
+                style={[styles.bookButton, bookButtonDisabled && styles.disabledButton]}
+                onPress={handleBooking}
+                disabled={bookButtonDisabled}
+              >
+                <Text style={styles.bookButtonText}>Book Now</Text>
+              </Pressable>
+
+              <Pressable style={styles.bookButton2} onPress={() => navigation.navigate("Home")}>
+                <Text style={styles.buttonText}>Cancel Booking</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </View>
-
-      <Text style={styles.selectedDateText}>
-        {selectedDate ? `You selected: ${selectedDate}` : 'No date selected'}
-      </Text>
-
-      <Pressable
-        style={[styles.bookButton, bookButtonDisabled && styles.disabledButton]}
-        onPress={handleBooking}
-        disabled={bookButtonDisabled}
-      >
-        <Text style={styles.bookButtonText}>Book Appointment</Text>
-      </Pressable>
-
-      <Pressable
-        style={styles.bookButton2}
-        onPress={() => navigation.navigate("Home")}
-      >
-        <Text style={styles.buttonText}>Cancel Booking</Text>
-      </Pressable>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 35,
-    paddingTop: 50,
+  scrollContainer: {
+    flexGrow: 1,
+    backgroundColor: '#232423',
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 20,
+    color: 'gray',
+    marginTop: 20,
     textAlign: 'center',
+    fontFamily: 'Kristi',
+    marginBottom: 10,
   },
   scheduleContainer: {
+    backgroundColor: '#2f2f2f',
+    margin: 20,
+    borderWidth: 2,
+    borderColor: 'black',
+    borderRadius: 20,
+    padding: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 100,
+    alignItems: 'flex-start',
+    maxWidth: 3000,
+    alignSelf: 'center',
+    flexWrap: 'wrap',
+  },
+  desktopContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignSelf: 'flex-start',
+    marginLeft: 150,
+    width: '55%',
+    flexWrap: 'wrap',
+  },
+  mobileContainer: {
+    flexDirection: 'column',
+    width: '100%',
+  },
+  calendarContainer: {
+    width: '50%',
+    maxWidth: 900,
+  },
+  formContainer: {
+    width: '48%',
+    maxWidth: 700,
+    alignSelf: 'flex-start',
+  },
+  fullWidthContainer: {
+    width: '100%',
   },
   calendar: {
-    width: 470,
-    marginLeft: 250,
-    marginTop: 20
-  },
-  timeContainer: {
-    marginRight: 750,
-    justifyContent: 'flex-start',
+    borderRadius: 10,
+    marginBottom: 20,
+    width: '100%',
+    height: 320,
+    borderWidth: 4,
+    borderColor: 'black',
   },
   label: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 15,
+    textAlign: 'center',
+    color: 'gray',
+  },
+  timeAndInputRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
+    marginTop: 10,
+    marginBottom: 0,
+  },
+  timeContainer: {
+    flexDirection: 'column',
+    flexWrap: 'wrap',
+    width: '45%',
+    marginRight: 10,
   },
   timeButton: {
-    backgroundColor: '#2196F3',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
+    backgroundColor: '#454343',
+    paddingVertical: 6,
     borderRadius: 10,
-    marginBottom: 15,
+    marginBottom: 6,
+    width: 90,
   },
   selectedTimeButton: {
-    backgroundColor: '#0D47A1',
+    backgroundColor: '#2B4620',
   },
   timeText: {
     color: 'white',
     fontSize: 16,
     textAlign: 'center',
   },
+  selectedTimeText: {
+    color: 'white',
+  },
   inputContainer: {
-    marginTop: 20,
-    position: 'absolute',
-    marginLeft: 170,
+    width: '50%',
+    justifyContent: 'flex-start',
+    marginTop: 5,
   },
   input: {
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 15,
-    width: 200,
+    backgroundColor: "#454343",
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 8,
+    fontSize: 16,
+    color: 'white',
   },
   selectedDateText: {
     fontSize: 18,
-    marginTop: 30,
+    marginBottom: 5,
     textAlign: 'center',
-    color: '#333',
+    color: 'gray',
+    fontFamily: 'Kristi',
   },
   bookButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 10,
-    marginTop: 280,
-    marginLeft: 425,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#2B4620',
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginTop: 15,
+    width: '100%',
     alignSelf: 'center',
-    position: 'absolute',
+    alignItems: 'center',
+    fontFamily: 'Kristi',
   },
   bookButton2: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 10,
-    marginTop: 340,
-    marginLeft: 390,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#650F0F',
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginTop: 15,
+    width: '100%',
     alignSelf: 'center',
-    position: 'absolute',
+    alignItems: 'center',
+    fontFamily: 'Kristi',
   },
   disabledButton: {
-    backgroundColor: '#D3D3D3',
+    backgroundColor: '#535050',
   },
   bookButtonText: {
     color: 'white',
-    fontSize: 16,
-    textAlign: 'center',
+    fontSize: 17,
+    fontWeight: '600',
+    fontFamily: 'Kristi',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 17,
+    fontWeight: '600',
+    fontFamily: 'Kristi',
   },
 });
 
