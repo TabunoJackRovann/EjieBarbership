@@ -1,6 +1,10 @@
 {
+   "_comment": " KANING SA UBOS NGA DIST MAO NI ANG RASON NGANO DILI MO GANA ANG HOSTING",
+   "_comment2": " tan awa ang dist folder, naa diha ang katong web build,,, dapat diri sa firebase.json kay public : dist",
+   "_comment3": " kung unsa ang name sa katong build (dist) mao sad dapat diri sa public: ( ___ ) <- dist ni sya",
+      "_comment4": "!!! PWEDE SAD I DELETE AND PUBLIC FOLDER PARA MAKA PAG DEBUG FOR IMPROVEMENTS !!! ",
   "hosting": {
-    "public": "web-build",
+    "public": "dist", 
     "ignore": [
       "firebase.json",
       "**/.*",
