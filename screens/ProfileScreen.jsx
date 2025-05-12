@@ -12,6 +12,7 @@ import {
 import { auth } from "../firebase/firebase";
 import { signOut } from "firebase/auth";
 import Logo from "../assets/Logo.png";
+import { admin } from '../constants/admin';
 
 export default function ProfileScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -41,17 +42,18 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  const handleManageUsers = () => {
-    if (user.email === "prefinal@gmail.com") {
-      setError("");
-      setUnauthorizedAttempts(0);
-      navigation.navigate("CRUD");
-    } else {
-      const newAttempts = unauthorizedAttempts + 1;
-      setUnauthorizedAttempts(newAttempts);
-      setError(newAttempts % 2 !== 0 ? "You are not authorized to access Admin panel." : "");
-    }
-  };
+const handleManageUsers = () => {
+  if (admin.includes(user.email)) {
+    setError("");
+    setUnauthorizedAttempts(0);
+    navigation.navigate("CRUD");
+  } else {
+    const newAttempts = unauthorizedAttempts + 1;
+    setUnauthorizedAttempts(newAttempts);
+    setError(newAttempts % 2 !== 0 ? "You are not authorized to access Admin panel." : "");
+  }
+};
+
 
   return (
     <View style={styles.container}>
