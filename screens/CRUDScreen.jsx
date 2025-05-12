@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, Button, StyleSheet, Alert } from "react-native";
+import { View, Text, FlatList, StyleSheet, Alert, TouchableOpacity } from "react-native";
 import { db } from "../firebase/firebase";
 import { collection, onSnapshot, doc, deleteDoc } from "firebase/firestore";
-import { useNavigation } from "@react-navigation/native";  // Import useNavigation
+import { useNavigation } from "@react-navigation/native";
 
 export default function CRUDScreen() {
   const [bookings, setBookings] = useState([]);
-  const navigation = useNavigation();  // Get navigation object
+  const navigation = useNavigation();
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "bookings"), (snapshot) => {
@@ -20,7 +20,6 @@ export default function CRUDScreen() {
     return () => unsubscribe();
   }, []);
 
-  // Delete booking from Firestore
   const handleDeleteBooking = async (bookingId) => {
     try {
       const bookingRef = doc(db, "bookings", bookingId);
@@ -28,7 +27,6 @@ export default function CRUDScreen() {
 
       Alert.alert("Success", "Booking deleted successfully!");
 
-      // Remove booking from the local state
       setBookings(bookings.filter((booking) => booking.id !== bookingId));
     } catch (error) {
       Alert.alert("Error", error.message);
@@ -42,10 +40,12 @@ export default function CRUDScreen() {
 
       {/* Back to Profile Button */}
       <View style={styles.backButtonContainer}>
-        <Button
-          title="Back"
-          onPress={() => navigation.goBack()}  // Navigate back to ProfileScreen
-        />
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()} // Navigate back to ProfileScreen
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Booking List */}
@@ -64,11 +64,12 @@ export default function CRUDScreen() {
             <Text style={styles.bookingText}>Time: {item.time}</Text>
 
             <View style={styles.buttonsContainer}>
-              <Button
-                title="Delete"
-                color="#d9534f"
+              <TouchableOpacity
+                style={styles.deleteButton}
                 onPress={() => handleDeleteBooking(item.id)}
-              />
+              >
+                <Text style={styles.deleteButtonText}>Delete</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -81,22 +82,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#f2f2f2",
+    backgroundColor: "#232423", // Dark background similar to ProfileScreen
   },
   header: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
+    color: "#ffffff", // White text color to stand out on the dark background
   },
   listHeader: {
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 10,
+    color: "#ffffff", // White text for the list header
   },
   bookingItem: {
     padding: 15,
-    backgroundColor: "#fff",
+    backgroundColor: "#2f2f2f", // Slightly lighter dark background
     marginBottom: 10,
     borderRadius: 8,
     borderColor: "#ddd",
@@ -106,15 +109,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "500",
     marginBottom: 5,
+    color: "#fff", // White text for booking details
   },
   buttonsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
+  },
+  deleteButton: {
+    backgroundColor: "#d9534f",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   backButtonContainer: {
     position: "absolute",
     top: 20,
     left: 10,
-    zIndex: 1,  // Ensure button stays on top of other elements
+    zIndex: 1,
+  },
+  backButton: {
+    backgroundColor: "#6A5ACD",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });

@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   useWindowDimensions,
+  Animated,
+  Easing
 } from "react-native";
 import { auth } from "../firebase/firebase";
 import { signOut } from "firebase/auth";
@@ -20,12 +22,24 @@ export default function ProfileScreen({ navigation }) {
   const [unauthorizedAttempts, setUnauthorizedAttempts] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { width } = useWindowDimensions();
+  const [sidebarAnim] = useState(new Animated.Value(-300)); // initial off-screen position
 
   const isSmallScreen = width <= 600;
   const user = auth.currentUser;
 
   const toggleSidebar = () => {
-    setIsSidebarOpen((prev) => !prev);
+    setIsSidebarOpen((prev) => {
+      const toValue = !prev ? 0 : -300; // 0 when open, -300 when closed
+
+      Animated.timing(sidebarAnim, {
+        toValue,
+        duration: 300,
+        useNativeDriver: false,
+        easing: Easing.out(Easing.ease),
+      }).start();
+
+      return !prev;
+    });
   };
 
   const handleLogout = async () => {
@@ -42,18 +56,17 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-const handleManageUsers = () => {
-  if (admin.includes(user.email)) {
-    setError("");
-    setUnauthorizedAttempts(0);
-    navigation.navigate("CRUD");
-  } else {
-    const newAttempts = unauthorizedAttempts + 1;
-    setUnauthorizedAttempts(newAttempts);
-    setError(newAttempts % 2 !== 0 ? "You are not authorized to access Admin panel." : "");
-  }
-};
-
+  const handleManageUsers = () => {
+    if (admin.includes(user.email)) {
+      setError("");
+      setUnauthorizedAttempts(0);
+      navigation.navigate("CRUD");
+    } else {
+      const newAttempts = unauthorizedAttempts + 1;
+      setUnauthorizedAttempts(newAttempts);
+      setError(newAttempts % 2 !== 0 ? "You are not authorized to access Admin panel." : "");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -83,9 +96,16 @@ const handleManageUsers = () => {
         )}
       </View>
 
-      {/* Sidebar */}
-      {isSidebarOpen && isSmallScreen && (
-        <View style={styles.sidebar}>
+      {/* Sidebar with Sliding Animation */}
+      {isSmallScreen && (
+        <Animated.View
+          style={[
+            styles.sidebar,
+            {
+              left: sidebarAnim, // Applying the animated value for sliding effect
+            },
+          ]}
+        >
           <Pressable onPress={() => navigation.navigate("Home")}>
             <Text style={[styles.navLink, { color: "black" }]}>Home</Text>
           </Pressable>
@@ -95,7 +115,7 @@ const handleManageUsers = () => {
           <Pressable onPress={() => navigation.navigate("Details")}>
             <Text style={[styles.navLink, { color: "black" }]}>Details</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       )}
 
       {/* Profile Content */}
@@ -195,7 +215,6 @@ const styles = StyleSheet.create({
   sidebar: {
     position: "absolute",
     top: 0,
-    left: 0,
     width: "60%",
     height: "100%",
     backgroundColor: "#5B6059",
@@ -281,4 +300,3 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
-

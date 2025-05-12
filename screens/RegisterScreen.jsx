@@ -12,7 +12,7 @@ import {
 import CustomCard from "../components/CustomCard";
 import { auth, db } from "../firebase/firebase";
 import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
-import { collection, addDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import Logo from "../assets/Logo.png";
 
 export default function RegisterScreen({ navigation }) {
@@ -25,35 +25,38 @@ export default function RegisterScreen({ navigation }) {
   const logoSize = width < 350 ? 100 : width < 420 ? 120 : 150;
 
   const handleRegister = async () => {
-    if (!email || !password) {
-      alert("Please enter username and password");
-      return;
-    } else if (password.length < 6 || confirmPassword.length < 6) {
-      setError("Password must be at least 6 characters");
-    } else if (confirmPassword !== password) {
-      setError("Passwords do not match");
-    } else {
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+  if (!email || !password) {
+    alert("Please enter username and password");
+    return;
+  } else if (password.length < 6 || confirmPassword.length < 6) {
+    setError("Password must be at least 6 characters");
+  } else if (confirmPassword !== password) {
+    setError("Passwords do not match");
+  } else {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-        await signOut(auth);
+      // ✅ Save user in Firestore with UID as document ID
+      await setDoc(doc(db, "users", user.uid), {
+        id: user.uid,
+        email: email,
+        password: password,
+        createdAt: new Date(),
+      });
 
-        await addDoc(collection(db, "users"), {
-          id: user.uid,
-          email: email,
-          password: password, // ⚠️ For testing only
-          createdAt: new Date(),
-        });
+      // ✅ Optional: sign out immediately
+      await signOut(auth);
 
-        console.log("✅ User registered, signed out, and added to Firestore");
-        navigation.navigate("Login");
-      } catch (error) {
-        setError(error.message);
-        console.error("❌ Registration error:", error);
-      }
+      console.log("✅ User registered, signed out, and added to Firestore");
+      navigation.navigate("Login");
+    } catch (error) {
+      setError(error.message);
+      console.error("❌ Registration error:", error);
     }
-  };
+  }
+};
+
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
