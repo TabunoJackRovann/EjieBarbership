@@ -7,6 +7,7 @@ import {
   Image,
   useWindowDimensions,
   TouchableOpacity,
+  Animated,
 } from "react-native";
 import Logo from "../assets/Logo.png"; // Ensure the logo path is correct
 
@@ -14,10 +15,20 @@ export default function HomeScreen({ navigation }) {
   const { width } = useWindowDimensions();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Animation value to control the sidebar position
+  const sidebarPosition = useState(new Animated.Value(-width * 0.6))[0]; // Start off-screen
+
   const isSmallScreen = width <= 600;
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
+
+    // Animate sidebar sliding in or out
+    Animated.timing(sidebarPosition, {
+      toValue: isSidebarOpen ? -width * 0.6 : 0, // Move sidebar to the left (-60%) or to the right (0)
+      duration: 300, // 300ms for the slide-in/out
+      useNativeDriver: true, // Use native driver for smoother performance
+    }).start();
   };
 
   return (
@@ -50,9 +61,11 @@ export default function HomeScreen({ navigation }) {
         )}
       </View>
 
-      {/* Sidebar */}
-      {isSidebarOpen && isSmallScreen && (
-        <View style={styles.sidebar}>
+      {/* Sidebar with Animated View */}
+      {isSmallScreen && (
+        <Animated.View
+          style={[styles.sidebar, { transform: [{ translateX: sidebarPosition }] }]}
+        >
           <Pressable onPress={() => navigation.navigate("Home")}>
             <Text style={[styles.navLink, { color: "black" }]}>Home</Text>
           </Pressable>
@@ -64,7 +77,7 @@ export default function HomeScreen({ navigation }) {
           <Pressable onPress={() => navigation.navigate("Details")}>
             <Text style={[styles.navLink, { color: "black" }]}>Details</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       )}
 
       {/* Main Content */}
@@ -161,7 +174,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginVertical: 10,
     borderWidth: 3,
-    
   },
   buttonText: {
     color: "#fff",

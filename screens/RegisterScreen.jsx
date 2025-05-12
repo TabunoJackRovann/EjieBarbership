@@ -43,7 +43,6 @@ export default function RegisterScreen({ navigation }) {
           id: user.uid,
           email: email,
           password: password, // ⚠️ For testing only
-          role: "",
           createdAt: new Date(),
         });
 
