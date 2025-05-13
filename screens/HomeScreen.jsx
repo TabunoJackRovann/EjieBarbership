@@ -9,25 +9,21 @@ import {
   TouchableOpacity,
   Animated,
 } from "react-native";
-import Logo from "../assets/Logo.png"; // Ensure the logo path is correct
+import Logo from "../assets/Logo.png"; // Adjust path if needed
 
 export default function HomeScreen({ navigation }) {
   const { width } = useWindowDimensions();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Animation value to control the sidebar position
-  const sidebarPosition = useState(new Animated.Value(-width * 0.6))[0]; // Start off-screen
+  const sidebarPosition = useState(new Animated.Value(-width * 0.6))[0];
 
   const isSmallScreen = width <= 600;
 
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
-
-    // Animate sidebar sliding in or out
     Animated.timing(sidebarPosition, {
-      toValue: isSidebarOpen ? -width * 0.6 : 0, // Move sidebar to the left (-60%) or to the right (0)
-      duration: 300, // 300ms for the slide-in/out
-      useNativeDriver: true, // Use native driver for smoother performance
+      toValue: isSidebarOpen ? -width * 0.6 : 0,
+      duration: 300,
+      useNativeDriver: true,
     }).start();
   };
 
@@ -49,11 +45,9 @@ export default function HomeScreen({ navigation }) {
             <Pressable onPress={() => navigation.navigate("Home")} style={styles.navButton}>
               <Text style={styles.navLink}>Home</Text>
             </Pressable>
-
             <Pressable onPress={() => navigation.navigate("Profile")} style={styles.navButton}>
               <Text style={styles.navLink}>Profile</Text>
             </Pressable>
-
             <Pressable onPress={() => navigation.navigate("Details")} style={styles.navButton}>
               <Text style={styles.navLink}>Details</Text>
             </Pressable>
@@ -61,7 +55,7 @@ export default function HomeScreen({ navigation }) {
         )}
       </View>
 
-      {/* Sidebar with Animated View */}
+      {/* Sidebar */}
       {isSmallScreen && (
         <Animated.View
           style={[styles.sidebar, { transform: [{ translateX: sidebarPosition }] }]}
@@ -69,24 +63,36 @@ export default function HomeScreen({ navigation }) {
           <Pressable onPress={() => navigation.navigate("Home")}>
             <Text style={[styles.navLink, { color: "black" }]}>Home</Text>
           </Pressable>
-
           <Pressable onPress={() => navigation.navigate("Profile")}>
             <Text style={[styles.navLink, { color: "black" }]}>Profile</Text>
           </Pressable>
-
           <Pressable onPress={() => navigation.navigate("Details")}>
             <Text style={[styles.navLink, { color: "black" }]}>Details</Text>
           </Pressable>
         </Animated.View>
       )}
 
-      {/* Main Content */}
+      {/* Main Content (Left Aligned) */}
       <View style={styles.content}>
+        <Text style={styles.headline}>Welcome to The Ejie Barbershop</Text>
+
+        <Text style={styles.description}>
+          Book your next haircut hassle-free with our online barbershop!
+          {"\n"}Choose your stylist, pick a time, and get ready to look your best.
+          {"\n"}Say goodbye to waiting and hello to convenience.
+        </Text>
+
+        <Text style={styles.description}>
+          Step into our barbershop and immerse yourself in the expertise of our seasoned professionals.
+          {"\n"}With a keen eye for detail and years of experience,
+          {"\n"}our skilled barbers guarantee precision cuts that exceed expectations every time.
+        </Text>
+
         <Pressable
           style={styles.bookButton}
           onPress={() => navigation.navigate("SelectBarber")}
         >
-          <Text style={styles.buttonText}>Book here</Text>
+          <Text style={styles.buttonText}>Book Now</Text>
         </Pressable>
       </View>
     </View>
@@ -164,16 +170,33 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
+    alignItems: "flex-start",
+    paddingHorizontal: 30,
+    paddingVertical: 40,
+    marginTop: 35
+  },
+  headline: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 20,
+    fontFamily: "Kristi",
+  },
+  description: {
+    fontSize: 20,
+    color: "#ddd",
+    marginBottom: 20,
+    lineHeight: 24,
+    fontFamily: "Kristi",
+    textAlign: "left",
   },
   bookButton: {
     backgroundColor: "#5B6059",
-    padding: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 30,
     borderRadius: 14,
-    marginVertical: 10,
     borderWidth: 3,
+    borderColor: "#444",
   },
   buttonText: {
     color: "#fff",

@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, Pressable, TextInput, ScrollView, Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  Pressable,
+  TextInput,
+  ScrollView,
+  Dimensions,
+  Modal,
+  TouchableOpacity
+} from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { getAuth } from 'firebase/auth';
 import { collection, addDoc, Timestamp, query, where, getDocs } from 'firebase/firestore';
@@ -14,6 +25,7 @@ const BookingScreen = ({ route, navigation }) => {
   const [screenWidth, setScreenWidth] = useState(Dimensions.get('window').width);
   const [hasExistingBooking, setHasExistingBooking] = useState(false);
   const [markedDates, setMarkedDates] = useState({});
+  const [modalVisible, setModalVisible] = useState(false);
 
   const { selectedBarber: barber } = route.params;
   const timeSlots = ['10:30AM', '11:00AM', '11:30AM', '12:00PM', '12:30PM'];
@@ -39,51 +51,44 @@ const BookingScreen = ({ route, navigation }) => {
   }, []);
 
   const handleBooking = async () => {
-  try {
-    const user = getAuth().currentUser;
-    if (!user) {
-      Alert.alert('Authentication Required', 'Please log in to make a booking');
-      return;
+    try {
+      const user = getAuth().currentUser;
+      if (!user) {
+        Alert.alert('Authentication Required', 'Please log in to make a booking');
+        return;
+      }
+
+      if (hasExistingBooking) {
+        Alert.alert('Booking Blocked', 'You already have an existing booking. Please cancel it first.');
+        return;
+      }
+
+      await addDoc(collection(db, 'bookings'), {
+        barber,
+        date: selectedDate,
+        time: selectedTime,
+        name,
+        phone,
+        email: user.email,
+        createdAt: Timestamp.now(),
+        status: 'pending',
+      });
+
+      // Show modal instead of Alert
+      setModalVisible(true);
+
+      // Reset form after booking
+      setSelectedDate('');
+      setSelectedTime('');
+      setName('');
+      setPhone('');
+      setMarkedDates({});
+      setHasExistingBooking(true);
+    } catch (error) {
+      console.error('Booking Error:', error);
+      Alert.alert('Error', 'Failed to book. Please try again later.');
     }
-
-    if (hasExistingBooking) {
-      Alert.alert('Booking Blocked', 'You already have an existing booking. Please cancel it first.');
-      return;
-    }
-
-    // Add the booking with a 'pending' status
-    await addDoc(collection(db, 'bookings'), {
-      barber,
-      date: selectedDate,
-      time: selectedTime,
-      name,
-      phone,
-      email: user.email,
-      createdAt: Timestamp.now(),
-      status: 'pending',  // New status field added here
-    });
-
-    Alert.alert(
-      'Booking Confirmed!',
-      `Thank you, ${name}! Your appointment with ${barber} on ${selectedDate} at ${selectedTime} has been booked.`
-    );
-
-    // Clear the selected date, time, and reset other states
-    setSelectedDate('');
-    setSelectedTime('');
-    setName('');
-    setPhone('');
-    setMarkedDates({}); // Clear the marked date in the calendar
-
-    setHasExistingBooking(true); // Prevent further bookings
-
-  } catch (error) {
-    console.error('Booking Error:', error);
-    Alert.alert('Error', 'Failed to book. Please try again later.');
-  }
-};
-
-  
+  };
 
   useEffect(() => {
     if (selectedDate && selectedTime && name && phone && barber && !hasExistingBooking) {
@@ -186,6 +191,32 @@ const BookingScreen = ({ route, navigation }) => {
           </View>
         </View>
       </View>
+
+      {/* ✅ Modal for Successful Booking */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Successfully Booked!</Text>
+            <Text style={styles.modalMessage}>
+              Please be on time on your chosen schedule, Thank you!
+            </Text>
+            <TouchableOpacity
+            style={styles.modalButton}
+          onPress={() => {
+      setModalVisible(false);
+       navigation.navigate('Home');
+         }}
+          >
+              <Text style={styles.modalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -347,6 +378,46 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     fontFamily: 'Kristi',
+  },
+  // ✅ Modal Styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  modalContent: {
+    backgroundColor: '#2f2f2f',
+    borderRadius: 20,
+    padding: 25,
+    alignItems: 'center',
+    marginHorizontal: 20,
+    borderWidth: 3,
+    borderColor: 'green'
+  },
+  modalTitle: {
+    fontSize: 22,
+    color: 'white',
+    fontWeight: 'bold',
+    marginBottom: 10,
+    fontFamily: 'Kristi',
+  },
+  modalMessage: {
+    color: 'white',
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButton: {
+    backgroundColor: 'green',
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  modalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

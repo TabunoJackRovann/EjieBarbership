@@ -9,7 +9,8 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   Animated,
-  Easing
+  Easing,
+  Modal
 } from "react-native";
 import { auth } from "../firebase/firebase";
 import { signOut } from "firebase/auth";
@@ -22,6 +23,7 @@ export default function ProfileScreen({ navigation }) {
   const [error, setError] = useState("");
   const [unauthorizedAttempts, setUnauthorizedAttempts] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false); // Modal state
   const { width } = useWindowDimensions();
   const [sidebarAnim] = useState(new Animated.Value(-300)); // initial off-screen position
 
@@ -67,6 +69,14 @@ export default function ProfileScreen({ navigation }) {
       setUnauthorizedAttempts(newAttempts);
       setError(newAttempts % 2 !== 0 ? "You are not authorized to access Admin panel." : "");
     }
+  };
+
+  const showLogoutModal = () => {
+    setIsModalVisible(true); // Show the modal when logout is triggered
+  };
+
+  const hideLogoutModal = () => {
+    setIsModalVisible(false); // Hide the modal
   };
 
   return (
@@ -141,7 +151,7 @@ export default function ProfileScreen({ navigation }) {
                 Account Created: {new Date(user.metadata.creationTime).toLocaleDateString()}
               </Text>
 
-              <Pressable style={styles.button} onPress={handleLogout}>
+              <Pressable style={styles.button} onPress={showLogoutModal}>
                 <Text style={styles.buttonText}>Logout</Text>
               </Pressable>
 
@@ -154,6 +164,29 @@ export default function ProfileScreen({ navigation }) {
           )
         )}
       </View>
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        transparent={true}
+        animationType="fade"
+        visible={isModalVisible}
+        onRequestClose={hideLogoutModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Are you sure you want to log out?</Text>
+            <View style={styles.modalButtons}>
+              <Pressable onPress={hideLogoutModal} style={styles.modalButton1}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </Pressable>
+              <Pressable onPress={handleLogout} style={styles.modalButton2}>
+                <Text style={styles.buttonText}>Logout</Text>
+              </Pressable>
+              
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -318,4 +351,44 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
   },
+
+ 
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "#2f2f2f",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalText: {
+    fontSize: 18,
+    marginBottom: 20,
+    textAlign: "center",
+    color: "white"
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
+  modalButton1: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: "green",
+    borderRadius: 5,
+  },
+
+   modalButton2: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: "red",
+    borderRadius: 5,
+  },
+  
 });

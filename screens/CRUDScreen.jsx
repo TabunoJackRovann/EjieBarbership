@@ -108,6 +108,7 @@ export default function CRUDScreen() {
               <Text style={styles.bookingText}>
                 Barber: <Text style={styles.barberName}>{item.barber}</Text>
               </Text>
+              <Text style={styles.bookingText}>Appointment Date: {item.date}</Text>
               <Text style={styles.bookingText}>Name: {item.name}</Text>
               <Text style={styles.bookingText}>Phone: {item.phone}</Text>
               <Text style={styles.bookingText}>Email: {item.email}</Text>
@@ -154,18 +155,21 @@ export default function CRUDScreen() {
             </Text>
 
             <View style={styles.modalButtons}>
-              <Pressable
-                style={styles.modalButtonYes}
-                onPress={handleConfirm}
-              >
-                <Text style={styles.modalButtonText}>Yes</Text>
-              </Pressable>
+              
               <Pressable
                 style={styles.modalButtonCancel}
                 onPress={() => setIsModalVisible(false)}
               >
                 <Text style={styles.modalButtonText}>Cancel</Text>
               </Pressable>
+
+                <Pressable
+                style={styles.modalButtonYes}
+                onPress={handleConfirm}
+              >
+                <Text style={styles.modalButtonText}>Yes</Text>
+              </Pressable>
+
             </View>
           </View>
         </View>
@@ -271,7 +275,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "%",
-    backgroundColor: "#fff",
+    backgroundColor: "#2f2f2f",
     borderRadius: 10,
     padding: 20,
     alignItems: "center",
@@ -282,6 +286,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 20,
     textAlign: "center",
+    color: 'white'
   },
   modalButtons: {
     flexDirection: "row",
@@ -289,14 +294,14 @@ const styles = StyleSheet.create({
     width: "50%",
   },
   modalButtonYes: {
-    backgroundColor: "#28a745",
+    backgroundColor: "red",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
     marginRight: 10,
   },
   modalButtonCancel: {
-    backgroundColor: "#d9534f",
+    backgroundColor: "green",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
