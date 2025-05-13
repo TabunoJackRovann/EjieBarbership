@@ -39,47 +39,50 @@ const BookingScreen = ({ route, navigation }) => {
   }, []);
 
   const handleBooking = async () => {
-    try {
-      const user = getAuth().currentUser;
-      if (!user) {
-        Alert.alert('Authentication Required', 'Please log in to make a booking');
-        return;
-      }
-  
-      if (hasExistingBooking) {
-        Alert.alert('Booking Blocked', 'You already have an existing booking. Please cancel it first.');
-        return;
-      }
-  
-      await addDoc(collection(db, 'bookings'), {
-        barber,
-        date: selectedDate,
-        time: selectedTime,
-        name,
-        phone,
-        email: user.email,
-        createdAt: Timestamp.now(),
-      });
-  
-      Alert.alert(
-        'Booking Confirmed!',
-        `Thank you, ${name}! Your appointment with ${barber} on ${selectedDate} at ${selectedTime} has been booked.`
-      );
-  
-      // Clear the selected date, time, and reset other states
-      setSelectedDate('');
-      setSelectedTime('');
-      setName('');
-      setPhone('');
-      setMarkedDates({}); // Clear the marked date in the calendar
-  
-      setHasExistingBooking(true); // Prevent further bookings
-  
-    } catch (error) {
-      console.error('Booking Error:', error);
-      Alert.alert('Error', 'Failed to book. Please try again later.');
+  try {
+    const user = getAuth().currentUser;
+    if (!user) {
+      Alert.alert('Authentication Required', 'Please log in to make a booking');
+      return;
     }
-  };
+
+    if (hasExistingBooking) {
+      Alert.alert('Booking Blocked', 'You already have an existing booking. Please cancel it first.');
+      return;
+    }
+
+    // Add the booking with a 'pending' status
+    await addDoc(collection(db, 'bookings'), {
+      barber,
+      date: selectedDate,
+      time: selectedTime,
+      name,
+      phone,
+      email: user.email,
+      createdAt: Timestamp.now(),
+      status: 'pending',  // New status field added here
+    });
+
+    Alert.alert(
+      'Booking Confirmed!',
+      `Thank you, ${name}! Your appointment with ${barber} on ${selectedDate} at ${selectedTime} has been booked.`
+    );
+
+    // Clear the selected date, time, and reset other states
+    setSelectedDate('');
+    setSelectedTime('');
+    setName('');
+    setPhone('');
+    setMarkedDates({}); // Clear the marked date in the calendar
+
+    setHasExistingBooking(true); // Prevent further bookings
+
+  } catch (error) {
+    console.error('Booking Error:', error);
+    Alert.alert('Error', 'Failed to book. Please try again later.');
+  }
+};
+
   
 
   useEffect(() => {

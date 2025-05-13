@@ -15,6 +15,7 @@ import { auth } from "../firebase/firebase";
 import { signOut } from "firebase/auth";
 import Logo from "../assets/Logo.png";
 import { admin } from '../constants/admin';
+import Icon from 'react-native-vector-icons/FontAwesome'; // Import icon library
 
 export default function ProfileScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -99,12 +100,7 @@ export default function ProfileScreen({ navigation }) {
       {/* Sidebar with Sliding Animation */}
       {isSmallScreen && (
         <Animated.View
-          style={[
-            styles.sidebar,
-            {
-              left: sidebarAnim, // Applying the animated value for sliding effect
-            },
-          ]}
+          style={[styles.sidebar, { left: sidebarAnim }]}
         >
           <Pressable onPress={() => navigation.navigate("Home")}>
             <Text style={[styles.navLink, { color: "black" }]}>Home</Text>
@@ -129,6 +125,15 @@ export default function ProfileScreen({ navigation }) {
               <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Text style={styles.backButtonText}>←</Text>
               </Pressable>
+
+              {/* Profile Picture */}
+              <View style={styles.profilePicture}>
+                {user.photoURL ? (
+                  <Image source={{ uri: user.photoURL }} style={styles.profileImage} />
+                ) : (
+                  <Icon name="user" size={50} color="#fff" /> // Default icon when no photo URL
+                )}
+              </View>
 
               <Text style={styles.header}>Welcome,</Text>
               <Text style={styles.email}>{user.email}</Text>
@@ -257,7 +262,7 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     alignItems: "center",
     elevation: 5,
-    position: "relative", // Ensure the back button is positioned relative to the card
+    position: "relative",
   },
   header: {
     fontSize: 22,
@@ -298,5 +303,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  profilePicture: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#555", // Placeholder color for default PFP
+    marginBottom: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
   },
 });
